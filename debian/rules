@@ -1,0 +1,74 @@
+#!/usr/bin/make -f
+
+PACKAGE         = dos2unix
+DOCROOTDIR      = $(CURDIR)/debian/$(PACKAGE)/usr/share/doc
+PKGDOCDIR       = $(DOCROOTDIR)/$(PACKAGE)
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+include debian/debian-save-restore.mk
+
+# Preserve original files, that will be generated afresh by Makefile
+FILE_LIST_PRESERVE = \
+ dos2unix.pdf \
+ dos2unix.ps \
+ dos2unix.txt \
+ unix2dos.pdf \
+ unix2dos.ps \
+ unix2dos.txt
+
+override_dh_auto_clean:
+	$(file-state-save)
+	dh_auto_clean
+
+install: build
+	# target: install
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs
+	dh_auto_install
+
+	# dos2unix-N.N/ => dos2unix/
+	mv -v $(DOCROOTDIR)/$$( cd $(DOCROOTDIR) && ls ) $(PKGDOCDIR)
+
+	# Remove files that are not needed. The PS and PDF are
+	# copies of manual pages.
+
+	rm -vf $(PKGDOCDIR)/COPYING.txt \
+	       $(PKGDOCDIR)/INSTALL.txt \
+	       $(PKGDOCDIR)/ChangeLog.txt \
+	       $(PKGDOCDIR)/dos2unix.ps \
+	       $(PKGDOCDIR)/dos2unix.pdf \
+	       $(PKGDOCDIR)/unix2dos.ps \
+	       $(PKGDOCDIR)/unix2dos.pdf
+
+binary-arch: build install
+	# target: binary-arch - Build architecture-dependent files here.
+	$(file-state-restore)
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs -X INSTALL.txt -X COPYING.txt -X ChangeLog.txt
+	dh_installexamples
+	dh_install
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-arch
+
+%:
+	dh  $@
+
+.PHONY: install
+.PHONY: binary binary-arch
+
+# End of file

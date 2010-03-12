@@ -1,0 +1,23 @@
+Source: dos2unix
+Section: text
+Priority: extra
+Maintainer: Jari Aalto <jari.aalto@cante.net>
+Build-Depends: debhelper (>= 7.1), ghostscript
+Standards-Version: 3.8.4
+Vcs-Browser: http://git.debian.org/?p=collab-maint/dos2unix.git
+Vcs-Git: git://git.debian.org/git/collab-maint/dos2unix.git
+Homepage: http://freshmeat.net/projects/dos2unix
+
+Package: dos2unix
+Conflicts: tofrodos (<< 1.7.8.debian.1-2)
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: convert text file line endings between CRLF and LF
+ This package includes two utilities to handle conversion of the text
+ file line ending: dos2unix and mac2unix. The text files stored under
+ Windows and DOS typically have two ASCII characters at the end: the
+ CR followed by LF code. The Unix and Linux store text files ending
+ only to LF and older Macs stored the files ending to CR. While modern
+ editors can read any one of them, there may be need to convert files
+ to one format or another.
+ This is the classic utility developed 1989.

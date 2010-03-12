@@ -1,0 +1,28 @@
+dos2unix (5.0-2) unstable; urgency=medium
+
+  * debian/control
+    - (Conflicts): add tofrodos (<< 1.7.8.debian.1-2) to handle
+      upgrades (serious; Closes: #573495). See
+      http://packages.qa.debian.org/t/tofrodos/news/20100121T214032Z.html
+
+ -- Jari Aalto <jari.aalto@cante.net>  Fri, 12 Mar 2010 11:17:24 +0200
+
+dos2unix (5.0-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control
+    - (Build-Depends): update to debhelper 7.1.
+  * debian/debian-save-restore.mk
+    - New file.
+  * debian/rules
+    - (.PHONY::binary): remove undefined target binary-indep.
+  * debian/watch
+    - Adjust URL and regexp.
+
+ -- Jari Aalto <jari.aalto@cante.net>  Tue, 09 Mar 2010 21:09:55 +0200
+
+dos2unix (4.1.2-1) unstable; urgency=low
+
+  * Initial release (Closes: #561307)
+
+ -- Jari Aalto <jari.aalto@cante.net>  Mon, 15 Feb 2010 00:04:25 +0200
