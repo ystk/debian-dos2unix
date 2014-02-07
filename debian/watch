@@ -1,3 +1,2 @@
 version=3
-# <Webpage URL> <string match>
-http://www.xs4all.nl/~waterlan/dos2unix.html .*dos2unix-(.*)\.tar\.gz
+http://www.xs4all.nl/~waterlan/dos2unix.html .*dos2unix-([.\d]+)\.tar\.gz

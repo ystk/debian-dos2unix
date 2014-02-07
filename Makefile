@@ -1,28 +1,69 @@
-
 # Author: Erwin Waterlander
-# Copyright (C) 2009-2010 Erwin Waterlander
-# This file is distributed under the same license as the dos2unix package.
+#
+#   Copyright (C) 2009-2012 Erwin Waterlander
+#   All rights reserved.
+# 
+#   Redistribution and use in source and binary forms, with or without
+#   modification, are permitted provided that the following conditions
+#   are met:
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice in the documentation and/or other materials provided with
+#      the distribution.
+# 
+#   THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY
+#   EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#   PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE
+#   FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+#   OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+#   BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+#   OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+#   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#   Description
+#
+#	This is a GNU Makefile that uses GNU compilers, linkers and cpp. The
+#	platform specific issues are determined by the various OS teets that
+#	rely on the uname(1) command and directory locations.
+#
+#	Set additional flags for the build with variables CFLAGS_USER,
+#	DEFS_USER and LDFLAGS_USER.
 
 include version.mk
 
-CC=gcc
-PACKAGE=dos2unix
-UNIX2DOS=unix2dos
-MAC2UNIX=mac2unix
-UNIX2MAC=unix2mac
+CC		= gcc
+CPP		= cpp
+CPP_FLAGS_POD	= ALL
+STRIP		= strip
 
-ENABLE_NLS = 1
+PACKAGE		= dos2unix
+UNIX2DOS	= unix2dos
+MAC2UNIX	= mac2unix
+UNIX2MAC	= unix2mac
+
+# Native Language Support (NLS)
+ENABLE_NLS	= 1
+# Large File Support (LFS)
+LFS             = 1
+DEBUG = 0
+UCS = 1
 
 EXE=
-ifneq (, $(wildcard /cygdrive))
-	EXE = .exe
-endif
-BIN=$(PACKAGE)$(EXE)
-UNIX2DOS_BIN=$(UNIX2DOS)$(EXE)
-MAC2UNIX_BIN=$(MAC2UNIX)$(EXE)
-UNIX2MAC_BIN=$(UNIX2MAC)$(EXE)
 
-LINK = ln -sf
+BIN		= $(PACKAGE)$(EXE)
+UNIX2DOS_BIN	= $(UNIX2DOS)$(EXE)
+MAC2UNIX_BIN	= $(MAC2UNIX)$(EXE)
+UNIX2MAC_BIN	= $(UNIX2MAC)$(EXE)
+
+# DJGPP support linking of .EXEs via 'stubify'.
+# See djgpp.mak and http://www.delorie.com/djgpp/v2faq/faq22_5.html
+
+LINK		= ln -sf
+LINK_MAN	= $(LINK)
 
 prefix		= /usr
 exec_prefix	= $(prefix)
@@ -30,7 +71,8 @@ bindir		= $(exec_prefix)/bin
 datarootdir	= $(prefix)/share
 datadir		= $(datarootdir)
 
-docdir		= $(datarootdir)/doc/$(PACKAGE)-$(DOS2UNIX_VERSION)
+docsubdir	= $(PACKAGE)-$(DOS2UNIX_VERSION)
+docdir		= $(datarootdir)/doc/$(docsubdir)
 localedir	= $(datarootdir)/locale
 mandir		= $(datarootdir)/man
 man1dir		= $(mandir)/man1
@@ -38,26 +80,32 @@ manext		= .1
 man1ext		= .1
 
 ifdef ENABLE_NLS
-DOS2UNIX_POT		= po/dos2unix/$(PACKAGE).pot
-DOS2UNIX_POFILES	= $(wildcard po/dos2unix/*.po)
-DOS2UNIX_MOFILES	= $(patsubst %.po,%.mo,$(DOS2UNIX_POFILES))
-UNIX2DOS_POT		= po/unix2dos/$(UNIX2DOS).pot
-UNIX2DOS_POFILES	= $(wildcard po/unix2dos/*.po)
-UNIX2DOS_MOFILES	= $(patsubst %.po,%.mo,$(UNIX2DOS_POFILES))
-MOFILES			= $(DOS2UNIX_MOFILES) $(UNIX2DOS_MOFILES)
+	POT		= po/$(PACKAGE).pot
+	POFILES		= $(wildcard po/??.po)
+	MOFILES		= $(patsubst %.po,%.mo,$(POFILES))
+	EOX_POFILES	= po/eo-x.po
+	NLSSUFFIX       = -nls
 endif
-DOCFILES	= $(PACKAGE).txt $(PACKAGE).ps $(PACKAGE).pdf $(UNIX2DOS).txt $(UNIX2DOS).ps $(UNIX2DOS).pdf
-INSTALL_OBJS_DOC = README.txt NEWS.txt ChangeLog.txt COPYING.txt TODO.txt $(DOCFILES)
+
+HTMLEXT = htm
+DOCFILES	= $(PACKAGE).txt $(PACKAGE).$(HTMLEXT)
+INSTALL_OBJS_DOC = README.txt NEWS.txt ChangeLog.txt COPYING.txt TODO.txt BUGS.txt $(DOCFILES)
+
+#PODFILES	= man/man1/dos2unix.pod $(wildcard man/*/man1/dos2unix.pod)
+PODFILES	= $(wildcard man/*/man1/dos2unix.pod)
+MANFILES	= $(patsubst %.pod,%.1,$(PODFILES))
 
 # On some systems (e.g. FreeBSD 4.10) GNU install is installed as `ginstall'.
 INSTALL		= install
+
 # On some systems (e.g. GNU Win32) GNU mkdir is installed as `gmkdir'.
 MKDIR           = mkdir
 
 ifdef ENABLE_NLS
 	DOS2UNIX_NLSDEFS = -DENABLE_NLS -DLOCALEDIR=\"$(localedir)\" -DPACKAGE=\"$(PACKAGE)\"
-	UNIX2DOS_NLSDEFS = -DENABLE_NLS -DLOCALEDIR=\"$(localedir)\" -DPACKAGE=\"$(UNIX2DOS)\"
 endif
+
+VERSIONSUFFIX	= -bin
 
 # ......................................................... OS flags ...
 
@@ -70,9 +118,8 @@ endif
 endif
 
 ifndef OS
-ifneq (, $(wildcard /cygdrive))
+ifeq ($(findstring CYGWIN,$(shell uname)),CYGWIN)
 	OS = cygwin
-	LINK = cp -f
 endif
 endif
 
@@ -80,22 +127,82 @@ ifeq (cygwin,$(OS))
 ifdef ENABLE_NLS
 	LDFLAGS_EXTRA = -lintl -liconv -Wl,--enable-auto-import
 endif
+	EXE = .exe
+	# allow non-cygwin clients which do not understand cygwin
+	# symbolic links to launch applications...
+	LINK = ln -f
+	# but use symbolic links for man pages, since man client
+	# IS a cygwin app and DOES understand symlinks.
+	LINK_MAN = ln -fs
+	# Cygwin packaging standard avoids version numbers on
+	# documentation directories.
+	docsubdir	= $(PACKAGE)
+	VERSIONSUFFIX	= -cygwin
 endif
 
+ifndef OS
+ifeq ($(findstring MSYS,$(shell uname)),MSYS)
+	OS = msys
+	EXE = .exe
+	VERSIONSUFFIX	= -msys
+	EO_XNOTATION=1
+	UCS =
+ifdef ENABLE_NLS
+	LDFLAGS_EXTRA = -lintl -liconv
+endif
+endif
+endif
+
+ifndef OS
+ifeq ($(findstring MINGW32,$(shell uname)),MINGW32)
+	OS = mingw32
+	prefix=c:/usr/local
+	EXE = .exe
+	VERSIONSUFFIX	= -win32
+	LINK = cp -f
+	EO_XNOTATION=1
+ifdef ENABLE_NLS
+	LDFLAGS_EXTRA = -lintl -liconv
+	ZIPOBJ_EXTRA = bin/libintl-8.dll bin/libiconv-2.dll
+endif
+endif
+endif
+
+ifndef OS
+ifeq ($(shell uname),MS-DOS)
+	OS = msdos
+	prefix=c:/djgpp
+	EXE = .exe
+	VERSIONSUFFIX	= -dos32
+	LINK_MAN = cp -f
+	docsubdir = dos2unix
+	EO_XNOTATION=1
+	UCS =
+	ZIPOBJ_EXTRA = bin/cwsdpmi.exe
+ifdef ENABLE_NLS
+	LDFLAGS_EXTRA = -lintl -liconv
+endif
+endif
+endif
 
 ifndef OS
 ifeq (FreeBSD, $(shell uname -s))
 	OS = freebsd
-endif
-endif
-
-ifeq (freebsd,$(OS))
-	# Running under FreeBSD
 ifdef ENABLE_NLS
 	CFLAGS_OS     = -I/usr/local/include
 	LDFLAGS_EXTRA = -lintl -L/usr/local/lib
 endif
 endif
+endif
+
+ifeq (Darwin, $(shell uname -s))
+	OS = Darwin
+ifdef ENABLE_NLS
+	CFLAGS_OS     = -I/usr/local/include
+	LDFLAGS_EXTRA = -lintl -L/usr/local/lib
+endif
+endif
+
 
 ifndef OS
 ifneq (, $(wildcard /opt/csw))
@@ -125,81 +232,116 @@ endif
 
 # ............................................................ flags ...
 
-CFLAGS	= -O2 -Wall -D_LARGEFILE_SOURCE $(RPM_OPT_FLAGS)
+# For systems that don't support Unicode or Latin-3, select
+# Esperanto in X-notation format: EO_XNOTATION=1
+
+ifdef EO_XNOTATION
+EO_NOTATION = -x
+endif
+
+CFLAGS_USER	=
+CFLAGS		= -O2 -Wall $(RPM_OPT_FLAGS) $(CPPFLAGS) $(CFLAGS_USER)
 
 EXTRA_CFLAGS	= -DVER_REVISION=\"$(DOS2UNIX_VERSION)\" \
 		  -DVER_DATE=\"$(DOS2UNIX_DATE)\" \
+		  -DVER_AUTHOR=\"$(DOS2UNIX_AUTHOR)\" \
+		  -DDEBUG=$(DEBUG) \
 		  $(CFLAGS_OS)
+
+ifeq ($(DEBUG), 1)
+	EXTRA_CFLAGS += -g
+endif
 
 ifdef STATIC
 	EXTRA_CFLAGS += -static
 endif
 
-LDFLAGS		= $(LDFLAGS_EXTRA)
+ifdef UCS
+	EXTRA_CFLAGS += -DD2U_UNICODE
+endif
 
-DEFS		= $(EXTRA_DEFS)
+ifdef LFS
+	EXTRA_CFLAGS += -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+endif
+
+LDFLAGS_USER	=
+LDFLAGS = $(RPM_OPT_FLAGS) $(LDFLAGS_EXTRA) $(LDFLAGS_USER)
+
+DEFS_USER	=
+DEFS		= $(EXTRA_DEFS) $(DEFS_USER)
 
 # .......................................................... targets ...
 
+all: $(BIN) $(MAC2UNIX_BIN) $(UNIX2DOS_BIN) $(UNIX2MAC_BIN) $(DOCFILES) $(MOFILES) $(EOX_POFILES) $(MANFILES) man/man1/dos2unix.1
 
-all: $(BIN) $(MAC2UNIX_BIN) $(UNIX2DOS_BIN) $(UNIX2MAC_BIN) $(MAC2UNIX).1 $(UNIX2MAC).1 $(DOCFILES) $(MOFILES)
-
-dos2unix.o : dos2unix.c
+common.o : common.c common.h
 	$(CC) $(DEFS) $(EXTRA_CFLAGS) $(DOS2UNIX_NLSDEFS) $(CFLAGS) -c $< -o $@
 
-unix2dos.o : unix2dos.c
-	$(CC) $(DEFS) $(EXTRA_CFLAGS) $(UNIX2DOS_NLSDEFS) $(CFLAGS) -c $< -o $@
+querycp.o : querycp.c querycp.h
+	$(CC) $(DEFS) $(EXTRA_CFLAGS) $(DOS2UNIX_NLSDEFS) $(CFLAGS) -c $< -o $@
 
-$(BIN): dos2unix.o
-	$(CC) $< $(LDFLAGS) -o $@
+dos2unix.o : dos2unix.c dos2unix.h querycp.h common.h
+	$(CC) $(DEFS) $(EXTRA_CFLAGS) $(DOS2UNIX_NLSDEFS) $(CFLAGS) -c $< -o $@
 
-$(UNIX2DOS_BIN): unix2dos.o
-	$(CC) $< $(LDFLAGS) -o $@
+unix2dos.o : unix2dos.c unix2dos.h querycp.h common.h
+	$(CC) $(DEFS) $(EXTRA_CFLAGS) $(DOS2UNIX_NLSDEFS) $(CFLAGS) -c $< -o $@
+
+$(BIN): dos2unix.o querycp.o common.o
+	$(CC) $+ $(LDFLAGS) -o $@
+
+$(UNIX2DOS_BIN): unix2dos.o querycp.o common.o
+	$(CC) $+ $(LDFLAGS) -o $@
 
 $(MAC2UNIX_BIN) : $(BIN)
 	$(LINK) $< $@
 
-$(MAC2UNIX).1 : $(PACKAGE).1
-	$(LINK) $< $@
+%.1 : %.pod
+	$(MAKE) -C man/man1
 
 $(UNIX2MAC_BIN) : $(UNIX2DOS_BIN)
 	$(LINK) $< $@
 
-$(UNIX2MAC).1 : $(UNIX2DOS).1
-	$(LINK) $< $@
-
-
 mofiles: $(MOFILES)
 
-docfiles: $(DOCFILES)
+html: $(PACKAGE).$(HTMLEXT)
 
-tags: $(DOS2UNIX_POT)
+txt: $(PACKAGE).txt
 
-merge: $(DOS2UNIX_POFILES)
+ps: $(PACKAGE).ps
 
-po/dos2unix/%.po : $(DOS2UNIX_POT)
-	msgmerge -U $@ $(DOS2UNIX_POT) --backup=numbered
+pdf: $(PACKAGE).pdf
 
-po/unix2dos/%.po : $(UNIX2DOS_POT)
-	msgmerge -U $@ $(UNIX2DOS_POT) --backup=numbered
+doc: $(DOCFILES) $(MANFILES) man/man1/dos2unix.1
+
+tags: $(POT)
+
+merge: $(POFILES) $(EOX_POFILES)
+
+po/%.po : $(POT)
+	msgmerge -U $@ $(POT) --backup=numbered
+	# change timestamp in case .po file was not updated.
+	touch $@
 
 %.mo : %.po
 	msgfmt -c $< -o $@
 
-$(DOS2UNIX_POT) : dos2unix.c
-	xgettext -C --keyword=_ $+ -o $(DOS2UNIX_POT)
+po/eo.mo : po/eo$(EO_NOTATION).po
+	msgfmt -c $< -o $@
 
-$(UNIX2DOS_POT) : unix2dos.c
-	xgettext -C --keyword=_ $+ -o $(UNIX2DOS_POT)
+$(POT) : dos2unix.c unix2dos.c common.c
+	xgettext -C --keyword=_ $+ -o $(POT)
 
-%.txt : %.1
-	LC_ALL=C nroff -man -c $< | col -bx > $@
+%.txt : man/man1/%.pod
+	LC_CTYPE=C pod2text $< > $@
 
-%.ps : %.1
+%.ps : man/man1/%.1
 	groff -man $< -T ps > $@
 
 %.pdf: %.ps
 	ps2pdf $< $@
+
+%.$(HTMLEXT) : man/man1/%.pod
+	pod2html --title="$(PACKAGE) $(DOS2UNIX_VERSION) - DOS/MAC to UNIX and vice versa text file format converter" $< > $@
 
 install: all
 	$(MKDIR) -p -m 755 $(DESTDIR)$(bindir)
@@ -213,19 +355,29 @@ else
 	cd $(DESTDIR)$(bindir); $(LINK) $(UNIX2DOS_BIN) $(UNIX2MAC_BIN)
 endif
 	$(MKDIR) -p -m 755 $(DESTDIR)$(man1dir)
-	$(INSTALL)  -m 644 $(PACKAGE).1 $(DESTDIR)$(man1dir)
-	$(INSTALL)  -m 644 $(MAC2UNIX).1 $(DESTDIR)$(man1dir)
-	$(INSTALL)  -m 644 $(UNIX2DOS).1 $(DESTDIR)$(man1dir)
-	$(INSTALL)  -m 644 $(UNIX2MAC).1 $(DESTDIR)$(man1dir)
+	$(INSTALL)  -m 644 man/man1/$(PACKAGE).1 $(DESTDIR)$(man1dir)
+ifeq ($(LINK_MAN),cp -f)
+	$(INSTALL)  -m 644 man/man1/$(PACKAGE).1 $(DESTDIR)$(man1dir)/$(MAC2UNIX).1
+	$(INSTALL)  -m 644 man/man1/$(PACKAGE).1 $(DESTDIR)$(man1dir)/$(UNIX2DOS).1
+	$(INSTALL)  -m 644 man/man1/$(PACKAGE).1 $(DESTDIR)$(man1dir)/$(UNIX2MAC).1
+else
+	cd $(DESTDIR)$(man1dir); $(LINK_MAN) $(PACKAGE).1 $(MAC2UNIX).1
+	cd $(DESTDIR)$(man1dir); $(LINK_MAN) $(PACKAGE).1 $(UNIX2DOS).1
+	cd $(DESTDIR)$(man1dir); $(LINK_MAN) $(PACKAGE).1 $(UNIX2MAC).1
+endif
+	$(foreach manfile, $(MANFILES), $(MKDIR) -p -m 755 $(DESTDIR)$(datarootdir)/$(dir $(manfile)) ;)
+	$(foreach manfile, $(MANFILES), $(INSTALL) -m 644 $(manfile) $(DESTDIR)$(datarootdir)/$(dir $(manfile)) ;)
+	$(foreach manfile, $(MANFILES), cd $(DESTDIR)$(datarootdir)/$(dir $(manfile)) ; $(LINK_MAN) $(PACKAGE).1 $(MAC2UNIX).1 ;)
+	$(foreach manfile, $(MANFILES), cd $(DESTDIR)$(datarootdir)/$(dir $(manfile)) ; $(LINK_MAN) $(PACKAGE).1 $(UNIX2DOS).1 ;)
+	$(foreach manfile, $(MANFILES), cd $(DESTDIR)$(datarootdir)/$(dir $(manfile)) ; $(LINK_MAN) $(PACKAGE).1 $(UNIX2MAC).1 ;)
 ifdef ENABLE_NLS
 	@echo "-- install-mo"
 	$(foreach mofile, $(MOFILES), $(MKDIR) -p -m 755 $(DESTDIR)$(localedir)/$(basename $(notdir $(mofile)))/LC_MESSAGES ;)
-	$(foreach mofile, $(DOS2UNIX_MOFILES), $(INSTALL) -m 644 $(mofile) $(DESTDIR)$(localedir)/$(basename $(notdir $(mofile)))/LC_MESSAGES/$(PACKAGE).mo ;)
-	$(foreach mofile, $(UNIX2DOS_MOFILES), $(INSTALL) -m 644 $(mofile) $(DESTDIR)$(localedir)/$(basename $(notdir $(mofile)))/LC_MESSAGES/$(UNIX2DOS).mo ;)
+	$(foreach mofile, $(MOFILES), $(INSTALL) -m 644 $(mofile) $(DESTDIR)$(localedir)/$(basename $(notdir $(mofile)))/LC_MESSAGES/$(PACKAGE).mo ;)
 endif
 	@echo "-- install-doc"
 	$(MKDIR) -p -m 755 $(DESTDIR)$(docdir)
-	$(INSTALL) -m 644 $(INSTALL_OBJS_DOC) $(DESTDIR)$(docdir)
+	$(INSTALL) -m 644 $(INSTALL_OBJS_DOC) $(wildcard $(PACKAGE).ps) $(wildcard $(PACKAGE).pdf) $(DESTDIR)$(docdir)
 
 uninstall:
 	@echo "-- target: uninstall"
@@ -234,24 +386,33 @@ uninstall:
 	-rm -f $(DESTDIR)$(bindir)/$(UNIX2DOS_BIN)
 	-rm -f $(DESTDIR)$(bindir)/$(UNIX2MAC_BIN)
 ifdef ENABLE_NLS
-	$(foreach mofile, $(DOS2UNIX_MOFILES), rm -f $(DESTDIR)$(localedir)/$(basename $(notdir $(mofile)))/LC_MESSAGES/$(PACKAGE).mo ;)
-	$(foreach mofile, $(UNIX2DOS_MOFILES), rm -f $(DESTDIR)$(localedir)/$(basename $(notdir $(mofile)))/LC_MESSAGES/$(UNIX2DOS).mo ;)
+	$(foreach mofile, $(MOFILES), rm -f $(DESTDIR)$(localedir)/$(basename $(notdir $(mofile)))/LC_MESSAGES/$(PACKAGE).mo ;)
 endif
 	-rm -f $(DESTDIR)$(mandir)/man1/$(PACKAGE).1
 	-rm -f $(DESTDIR)$(mandir)/man1/$(MAC2UNIX).1
 	-rm -f $(DESTDIR)$(mandir)/man1/$(UNIX2DOS).1
 	-rm -f $(DESTDIR)$(mandir)/man1/$(UNIX2MAC).1
+	$(foreach manfile, $(MANFILES), rm -f $(DESTDIR)$(datarootdir)/$(manfile) ;)
 	-rm -rf $(DESTDIR)$(docdir)
 
-clean:
+mostlyclean:
 	rm -f *.o
-	rm -f $(BIN) $(UNIX2DOS_BIN) $(MAC2UNIX_BIN) $(UNIX2MAC_BIN) $(MAC2UNIX).1 $(UNIX2MAC).1
+	rm -f $(BIN) $(UNIX2DOS_BIN) $(MAC2UNIX_BIN) $(UNIX2MAC_BIN)
 	rm -f *.bak *~
-	rm -f */*.bak */*~
+	rm -f *.tmp
+	rm -f man/man1/*.bak man/man1/*~
+	rm -f man/*/man1/*.bak man/*/man1/*~
+	rm -f po/*.bak po/*~
+	rm -f po/*.mo
 
-maintainer-clean: clean
-	rm -f $(DOCFILES)
-	rm -f $(MOFILES)
+clean: mostlyclean
+	rm -f $(DOCFILES) $(PACKAGE).ps $(PACKAGE).pdf
+	rm -f man/man1/*.1
+	rm -f man/*/man1/*.1
+
+distclean: clean
+
+maintainer-clean: distclean
 
 realclean: maintainer-clean
 
@@ -264,41 +425,49 @@ ZIPOBJ	= bin/$(BIN) \
 	  share/man/man1/$(MAC2UNIX).1 \
 	  share/man/man1/$(UNIX2DOS).1 \
 	  share/man/man1/$(UNIX2MAC).1 \
-	  share/doc/$(PACKAGE)-$(DOS2UNIX_VERSION) \
+	  share/man/*/man1/$(PACKAGE).1 \
+	  share/man/*/man1/$(MAC2UNIX).1 \
+	  share/man/*/man1/$(UNIX2DOS).1 \
+	  share/man/*/man1/$(UNIX2MAC).1 \
+	  share/doc/$(docsubdir) \
 	  $(ZIPOBJ_EXTRA)
 
 ifdef ENABLE_NLS
 ZIPOBJ += share/locale/*/LC_MESSAGES/$(PACKAGE).mo
-ZIPOBJ += share/locale/*/LC_MESSAGES/$(UNIX2DOS).mo
 endif
 
-VERSIONSUFFIX	= -bin
-ZIPFILE = $(PACKAGE)-$(DOS2UNIX_VERSION)$(VERSIONSUFFIX).zip
-TGZFILE = $(PACKAGE)-$(DOS2UNIX_VERSION)$(VERSIONSUFFIX).tar.gz
-TBZFILE = $(PACKAGE)-$(DOS2UNIX_VERSION)$(VERSIONSUFFIX).tar.bz2
+ZIPFILE = $(PACKAGE)-$(DOS2UNIX_VERSION)$(VERSIONSUFFIX)$(NLSSUFFIX).zip
+TGZFILE = $(PACKAGE)-$(DOS2UNIX_VERSION)$(VERSIONSUFFIX)$(NLSSUFFIX).tar.gz
+TBZFILE = $(PACKAGE)-$(DOS2UNIX_VERSION)$(VERSIONSUFFIX)$(NLSSUFFIX).tar.bz2
 
 dist-zip:
 	rm -f $(prefix)/$(ZIPFILE)
-	cd $(prefix) ; unix2dos share/doc/$(PACKAGE)-$(DOS2UNIX_VERSION)/*.txt share/man/man1/$(PACKAGE).1 share/man/man1/$(MAC2UNIX).1 share/man/man1/$(UNIX2DOS).1 share/man/man1/$(UNIX2MAC).1
+	cd $(prefix) ; unix2dos share/doc/$(docsubdir)/*.txt share/man/man1/$(PACKAGE).1 share/man/man1/$(MAC2UNIX).1 share/man/man1/$(UNIX2DOS).1 share/man/man1/$(UNIX2MAC).1
+	cd $(prefix) ; unix2dos share/doc/$(docsubdir)/*.$(HTMLEXT)
+	cd $(prefix) ; unix2dos share/man/*/man1/$(PACKAGE).1 share/man/*/man1/$(MAC2UNIX).1 share/man/*/man1/$(UNIX2DOS).1 share/man/*/man1/$(UNIX2MAC).1
 	cd $(prefix) ; zip -r $(ZIPFILE) $(ZIPOBJ)
 	mv -f $(prefix)/$(ZIPFILE) ..
 
 dist-tgz:
-	cd $(prefix) ; dos2unix share/doc/$(PACKAGE)-$(DOS2UNIX_VERSION)/*.txt share/man/man1/$(PACKAGE).1 share/man/man1/$(MAC2UNIX).1 share/man/man1/$(UNIX2DOS).1 share/man/man1/$(UNIX2MAC).1
+	cd $(prefix) ; dos2unix share/doc/$(docsubdir)/*.txt share/man/man1/$(PACKAGE).1 share/man/man1/$(MAC2UNIX).1 share/man/man1/$(UNIX2DOS).1 share/man/man1/$(UNIX2MAC).1
+	cd $(prefix) ; dos2unix share/man/*/man1/$(PACKAGE).1 share/man/*/man1/$(MAC2UNIX).1 share/man/*/man1/$(UNIX2DOS).1 share/man/*/man1/$(UNIX2MAC).1
 	cd $(prefix) ; tar cvzf $(TGZFILE) $(ZIPOBJ)
 	mv $(prefix)/$(TGZFILE) ..
 
 dist-tbz:
-	cd $(prefix) ; dos2unix share/doc/$(PACKAGE)-$(DOS2UNIX_VERSION)/*.txt share/man/man1/$(PACKAGE).1 share/man/man1/$(MAC2UNIX).1 share/man/man1/$(UNIX2DOS).1 share/man/man1/$(UNIX2MAC).1
+	cd $(prefix) ; dos2unix share/doc/$(docsubdir)/*.txt share/man/man1/$(PACKAGE).1 share/man/man1/$(MAC2UNIX).1 share/man/man1/$(UNIX2DOS).1 share/man/man1/$(UNIX2MAC).1
+	cd $(prefix) ; dos2unix share/man/*/man1/$(PACKAGE).1 share/man/*/man1/$(MAC2UNIX).1 share/man/*/man1/$(UNIX2DOS).1 share/man/*/man1/$(UNIX2MAC).1
 	cd $(prefix) ; tar cvjf $(TBZFILE) $(ZIPOBJ)
 	mv $(prefix)/$(TBZFILE) ..
 
 dist: dist-tgz
 
 strip:
-	strip $(BIN)
-	strip $(UNIX2DOS_BIN)
+	$(STRIP) $(BIN)
+	$(STRIP) $(UNIX2DOS_BIN)
 ifeq ($(LINK),cp -f)
-	strip $(MAC2UNIX_BIN)
-	strip $(UNIX2MAC_BIN)
+	$(STRIP) $(MAC2UNIX_BIN)
+	$(STRIP) $(UNIX2MAC_BIN)
 endif
+
+# End of file

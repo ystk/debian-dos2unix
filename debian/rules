@@ -1,74 +1,35 @@
 #!/usr/bin/make -f
 
-PACKAGE         = dos2unix
-DOCROOTDIR      = $(CURDIR)/debian/$(PACKAGE)/usr/share/doc
-PKGDOCDIR       = $(DOCROOTDIR)/$(PACKAGE)
+PACKAGE		= dos2unix
+PKGDIR		= $(CURDIR)/debian/$(PACKAGE)
+DOCROOTDIR	= $(PKGDIR)/usr/share/doc
+PKGDOCDIR	= $(DOCROOTDIR)/$(PACKAGE)
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+export DEB_BUILD_MAINT_OPTIONS	= hardening=+all
+export DEB_CFLAGS_MAINT_APPEND	= -Wall -pedantic
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
-include debian/debian-save-restore.mk
+override_dh_auto_build:
+	# save/restore original file as it is.
+	cp -va po/dos2unix.pot po/dos2unix.pot.original
+	$(MAKE) HTMLEXT=html \
+		CFLAGS="$(CPPFLAGS) $(CFLAGS)" \
+		LDFLAGS_USER="$(LDFLAGS)"
+	mv -v po/dos2unix.pot.original po/dos2unix.pot
 
-# Preserve original files, that will be generated afresh by Makefile
-FILE_LIST_PRESERVE = \
- dos2unix.pdf \
- dos2unix.ps \
- dos2unix.txt \
- unix2dos.pdf \
- unix2dos.ps \
- unix2dos.txt
-
-override_dh_auto_clean:
-	$(file-state-save)
-	dh_auto_clean
-
-install: build
-	# target: install
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
+override_dh_auto_install:
 	dh_auto_install
 
 	# dos2unix-N.N/ => dos2unix/
-	mv -v $(DOCROOTDIR)/$$( cd $(DOCROOTDIR) && ls ) $(PKGDOCDIR)
+	mv -v $(DOCROOTDIR)/$$(cd $(DOCROOTDIR) && ls) $(PKGDOCDIR)
 
-	# Remove files that are not needed. The PS and PDF are
-	# copies of manual pages.
+	# Remove files that are not needed
 
 	rm -vf $(PKGDOCDIR)/COPYING.txt \
 	       $(PKGDOCDIR)/INSTALL.txt \
 	       $(PKGDOCDIR)/ChangeLog.txt \
-	       $(PKGDOCDIR)/dos2unix.ps \
-	       $(PKGDOCDIR)/dos2unix.pdf \
-	       $(PKGDOCDIR)/unix2dos.ps \
-	       $(PKGDOCDIR)/unix2dos.pdf
-
-binary-arch: build install
-	# target: binary-arch - Build architecture-dependent files here.
-	$(file-state-restore)
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs
-	dh_installdocs -X INSTALL.txt -X COPYING.txt -X ChangeLog.txt
-	dh_installexamples
-	dh_install
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-arch
 
 %:
-	dh  $@
-
-.PHONY: install
-.PHONY: binary binary-arch
+	dh $@
 
 # End of file
