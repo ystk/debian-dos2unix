@@ -2,10 +2,10 @@ Source: dos2unix
 Section: text
 Priority: extra
 Maintainer: Jari Aalto <jari.aalto@cante.net>
-Build-Depends: debhelper (>= 9)
-Standards-Version: 3.9.3.1
-Vcs-Browser: http://git.debian.org/?p=collab-maint/dos2unix.git
-Vcs-Git: git://git.debian.org/git/collab-maint/dos2unix.git
+Build-Depends: dpkg-dev (>= 1.16.2), debhelper (>= 9)
+Standards-Version: 3.9.5
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/dos2unix.git
+Vcs-Git: git://anonscm.debian.org/collab-maint/dos2unix.git
 Homepage: http://freshmeat.net/projects/dos2unix
 
 Package: dos2unix

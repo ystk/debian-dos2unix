@@ -1,3 +1,57 @@
+dos2unix (6.0.4-1) unstable; urgency=low
+
+  * New upstream release.
+    - GPG signed source package
+  * debian/control
+    - (Standards-Version): Update to 3.9.5.
+    - (Vcs-*): Update to anonscm.debian.org.
+  * debian/source/include-binaries
+    - New.
+  * debian/upstream-signing-key.pgp
+    - New.
+  * debian/watch
+    - (pgpsigurlmangle): Add.
+
+ -- Jari Aalto <jari.aalto@cante.net>  Fri, 03 Jan 2014 13:05:44 +0200
+
+dos2unix (6.0.3-1) unstable; urgency=low
+
+  * New upstream release.
+    - Support compiling with Microsoft Visual C.
+    - Display an error message if writing output fails.
+  * debian/control
+    - (Standards-Version): Update to 3.9.4.
+  * debian/copyright
+    - Update current year.
+
+ -- Jari Aalto <jari.aalto@cante.net>  Sat, 26 Jan 2013 09:15:45 +0200
+
+dos2unix (6.0.2-1) unstable; urgency=low
+
+  * New upstream release.
+    - The locale encoding detection has been fixed when NLS was disabled.
+    - Display line number when a binary symbol is found.
+    - Update makefiles for Watcom C, and added a new one for OS/2.
+  * debian/clean
+    - Drop wildcard from dos2unix.htm*, drop Spanish man/es/* line.
+  * debian/compat
+    - Update to 9.
+  * debian/docs
+     - Clean up for current release.
+  * debian/control
+    - (Build-Depends): Add dpkg-dev for hardened flags.
+      Update to debhelper 9.
+  * debian/copyright
+    - Update to Format 1.0
+  * debian/rules
+    - Use hardened build flags
+      http://wiki.debian.org/ReleaseGoals/SecurityHardeningBuildFlags
+    - (dh_installdocs): Remove. Not needed after debian/docs clean up.
+  * debian/watch
+    - Remove extra comment.
+
+ -- Jari Aalto <jari.aalto@cante.net>  Fri, 14 Sep 2012 07:12:23 +0300
+
 dos2unix (6.0-1) unstable; urgency=low
 
   * New upstream release, see changes:

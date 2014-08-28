@@ -9,35 +9,36 @@ X-Source: http://sourceforge.net/projects/dos2unix
 
 Files: *
 Copyright:
-  2009-2011 Erwin Waterlander <waterlan@xs4all.nl>,
-  1998 Christian Wurll <wurll@ira.uka.de>
-  1988 Bernd Johannes Wuebben <wuebben@kde.org>
-  1989, 1994, 1995 Benjamin Lin <blin@socs.uts.edu.au>
+ 2009-2011 Erwin Waterlander <waterlan@xs4all.nl>,
+ 1998 Christian Wurll <wurll@ira.uka.de>
+ 1988 Bernd Johannes Wuebben <wuebben@kde.org>
+ 1989, 1994, 1995 Benjamin Lin <blin@socs.uts.edu.au>
 X-License-Comment:
-  Aka FreeBSD license; see file COPYING.txt
-  See http://www.freebsd.org/copyright/freebsd-license.html
+ Aka FreeBSD license.
+ See http://www.freebsd.org/copyright/freebsd-license.html
+ The License text below if from COPYING.txt
 License: BSD-2-clause
 
 Files: querycp.c
 Copyright:
-  2009 <rugxulo@gmail.com>
+ 2009 <rugxulo@gmail.com>
 X-License-Comment:
-  // Tuesday, May 5, 2009    1:40pm
-  // rugxulo _AT_ gmail _DOT_ com
+ // Tuesday, May 5, 2009    1:40pm
+ // rugxulo _AT_ gmail _DOT_ com
 License: Public-Domain
-  [from querycp.c]
-  /* The code in this file is Public Domain */
+ [from querycp.c]
+ /* The code in this file is Public Domain */
 
 Files: querycp.h
 Copyright:
-  Public Domain
+ Public Domain
 License: Public-Domain
-  [from querycp.h]
-  /* The code in this file is Public Domain */
+ [from querycp.h]
+ /* The code in this file is Public Domain */
 
 Files: debian/*
 Copyright:
-  2009-2012 Jari Aalto <jari.aalto@cante.net>
+ 2009-2013 Jari Aalto <jari.aalto@cante.net>
 License: GPL-2+
 
 License: GPL-2+
